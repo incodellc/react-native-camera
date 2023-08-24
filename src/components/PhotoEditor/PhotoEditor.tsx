@@ -5,12 +5,15 @@ import styles from '~components/PhotoEditor/styles';
 import {PhotoFile} from 'react-native-vision-camera';
 import storage from '@react-native-firebase/storage';
 import * as Progress from 'react-native-progress';
+import firestore from '@react-native-firebase/firestore';
 
 interface IPhotoEditorProps {
   photo: PhotoFile;
   setPhoto: (photo: PhotoFile | undefined) => void;
   onDiscard: () => void;
 }
+
+const postsCollection = firestore().collection('Posts');
 
 const PhotoEditor: React.FC<IPhotoEditorProps> = ({
   photo,
@@ -36,10 +39,19 @@ const PhotoEditor: React.FC<IPhotoEditorProps> = ({
           setLoading(taskSnapshot.bytesTransferred / taskSnapshot.totalBytes);
         });
 
-        task.then(() => {
-          console.log('Image uploaded to the bucket!');
-          setLoading(null);
-          setPhoto(undefined);
+        task.then(async () => {
+          try {
+            await postsCollection.add({
+              imagePath:
+                'images/' +
+                photo?.path.split('/')[photo?.path.split('/').length - 1],
+              createdAt: new Date().toISOString(),
+            });
+            setLoading(null);
+            setPhoto(undefined);
+          } catch (err) {
+            console.log('[ERROR writting to firestore] => ', err);
+          }
         });
       } catch (e) {
         console.log('[ERROR upload photo to storage] => ', e);
@@ -63,7 +75,7 @@ const PhotoEditor: React.FC<IPhotoEditorProps> = ({
         <View style={[styles.loaderContainer]}>
           <Progress.Pie
             progress={loading}
-            size={250}
+            size={150}
             animated
             color={'rgba(191, 189, 189, 0.4)'}
             borderWidth={0}

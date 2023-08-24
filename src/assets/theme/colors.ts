@@ -1,0 +1,27 @@
+export const ThemeColors = {
+  white: '#FFFFFF',
+  pink: '#F8A289',
+  lightBrown: '#7E6357',
+  lightBrown200: '#A79389',
+  red: '#f75454',
+  corral: '#E56C60',
+  gray200: '#4D6B6E',
+  gray300: '#B1CAC9',
+  gray: '#828282',
+  lightGray: '#E3E3E3',
+  beige: '#C29981',
+  green: '#3BAE49',
+  lightGreen: '#93C13E',
+  lightGreen200: '#0C9E76',
+  lightGreen300: '#06B36F',
+  saladGreen: '#C1D32F',
+  darkGreen: '#01524D',
+  darkGreen200: '#022C30',
+  darkGreen300: '#077C5C',
+  darkGreen400: '#0A291C',
+  turquoise: '#8AAFAD',
+  blue: '#2F84D3',
+  rose: '#D43BA0',
+};
+
+export const lineChartColors = [];
