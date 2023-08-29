@@ -1,61 +1,47 @@
-import React, {useCallback, useEffect, useState} from 'react';
-import {FlatList, Image, Text} from 'react-native';
-import storage, {FirebaseStorageTypes} from '@react-native-firebase/storage';
+import React, {useCallback, useMemo, useState} from 'react';
+import { FlatList, RefreshControl, View } from "react-native";
 import styles from '~components/Home/styles';
-
-const reference = storage().ref('images');
+import useGetPosts from '../../hooks/useGetPosts';
+import {IPost} from '~types/Posts';
+import {Spinner} from '~components/Spinner';
+import {ThemeColors} from '~assets/theme';
+import {Post} from '~components/Post';
 
 const Home = () => {
-  const [nextPage, setNextPage] = useState<null | string>(null);
-  const [photos, setPhotos] = useState<FirebaseStorageTypes.Reference[] | null>(
-    null,
-  );
+  const {posts, retrieveData, hasMore, isLoading, refreshData} = useGetPosts();
+  const [refreshing, setRefreshing] = useState<boolean>(false);
 
-  const getPhotos = (
-    storageReference: FirebaseStorageTypes.Reference,
-    pageToken?: string,
-  ) => {
-    return storageReference.list({pageToken}).then(result => {
-      setPhotos(result.items);
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    refreshData();
+    setRefreshing(false);
+  }, [refreshData]);
 
-      if (result.nextPageToken) {
-        setNextPage(result.nextPageToken);
-      } else {
-        setNextPage(null);
-      }
-
-      return Promise.resolve();
-    });
-  };
-
-  useEffect(() => {
-    (async () => {
-      await getPhotos(reference);
-    })();
+  const renderItem = useCallback(({item}: {item: IPost}) => {
+    return <Post post={item} />;
   }, []);
 
-  const renderItem = useCallback(
-    ({item}: {item: FirebaseStorageTypes.Reference}) => {
-      console.log(
-        item.fullPath,
-        '\n',
-        'https://firebasestorage.googleapis.com/v0/b/' + item.fullPath,
-      );
-
-      return <Image source={{uri: ''}} style={styles.photo} />;
-    },
-    [],
+  const ListFooterComponent = useMemo(
+    () => (isLoading ? <Spinner color={ThemeColors.white} /> : null),
+    [isLoading],
   );
 
   return (
-    <>
-      <Text>Home</Text>
+    <View style={styles.container}>
       <FlatList
-        data={photos}
-        keyExtractor={item => item.fullPath}
+        data={posts}
         renderItem={renderItem}
+        keyExtractor={item => item.id}
+        onEndReached={hasMore ? retrieveData : undefined}
+        onEndReachedThreshold={0.1}
+        style={styles.list}
+        ListFooterComponent={ListFooterComponent}
+        contentContainerStyle={[styles.listContentContainer]}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
       />
-    </>
+    </View>
   );
 };
 
